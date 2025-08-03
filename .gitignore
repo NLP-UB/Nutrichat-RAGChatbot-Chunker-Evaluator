@@ -1,1 +1,4 @@
 video_notebooks/*
+src/__pycache__/*
+data/*
+qdrant_storage/*
