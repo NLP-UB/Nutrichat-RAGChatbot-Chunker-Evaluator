@@ -8,7 +8,7 @@ def main():
     args = parser.parse_args()
 
     # Initialize RAG pipeline (will only index once if Qdrant is empty)
-    rag = RAGPipeline(data_path=args.docs)
+    rag = RAGPipeline()
 
     # Generate answer from query
     answer = rag.answer_question(args.query)

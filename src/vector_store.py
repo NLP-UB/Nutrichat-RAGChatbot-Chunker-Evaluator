@@ -5,7 +5,7 @@ import uuid
 import os
 
 class VectorStore:
-    def __init__(self, dimension, collection_name="rag_collection", storage_path="./qdrant_storage"):
+    def __init__(self, dimension, collection_name="test", storage_path="./qdrant_storage"):
         os.makedirs(storage_path, exist_ok=True)
         self.client = QdrantClient(path=storage_path)
         self.collection_name = collection_name

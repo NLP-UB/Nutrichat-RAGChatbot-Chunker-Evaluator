@@ -7,8 +7,8 @@ from .retriever import Retriever
 from .generator import Generator
 
 class RAGPipeline:
-    def __init__(self, data_path=None, embed_model='all-MiniLM-L6-v2', gen_model='google/flan-t5-base',
-                 storage_path="./qdrant_storage", collection_name="rag_collection"):
+    def __init__(self, data_path="data", embed_model='all-MiniLM-L6-v2', gen_model='google/flan-t5-base',
+                 storage_path="./qdrant_storage", collection_name="recursive"):
         """
         RAG Pipeline that uses Qdrant persistent storage for embeddings.
 
@@ -62,7 +62,7 @@ class RAGPipeline:
                     print(f"Skipping empty PDF: {file_path}")
                     continue
 
-                chunks = chunk_text(text)
+                chunks = chunk_text(text,method=self.collection_name, chunk_size=500, overlap=50)
                 embeddings = self.embedder.embed(chunks)
 
                 all_chunks.extend(chunks)
