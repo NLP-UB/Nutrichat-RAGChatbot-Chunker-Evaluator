@@ -11,7 +11,7 @@ class VectorStore:
         self.collection_name = collection_name
         self.dimension = dimension
 
-        # ✅ Create collection only if it does not exist
+        # Create collection only if it does not exist
         collections = [col.name for col in self.client.get_collections().collections]
         if collection_name not in collections:
             self.client.recreate_collection(

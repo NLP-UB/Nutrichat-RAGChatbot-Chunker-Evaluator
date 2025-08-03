@@ -1,18 +1,19 @@
 import os
+import glob
 from .loader import load_pdf, chunk_text
 from .embedder import Embedder
 from .vector_store import VectorStore
 from .retriever import Retriever
 from .generator import Generator
 
-
 class RAGPipeline:
-    def __init__(self, embed_model='all-MiniLM-L6-v2', gen_model='google/flan-t5-base',
+    def __init__(self, data_path=None, embed_model='all-MiniLM-L6-v2', gen_model='google/flan-t5-base',
                  storage_path="./qdrant_storage", collection_name="rag_collection"):
         """
         RAG Pipeline that uses Qdrant persistent storage for embeddings.
 
         Args:
+            data_path (str): Directory containing PDF files for initial indexing
             embed_model (str): Sentence Transformer model for embeddings
             gen_model (str): Text generation model
             storage_path (str): Local folder for persistent Qdrant storage
@@ -24,25 +25,58 @@ class RAGPipeline:
         self.retriever = Retriever(self.vector_store, self.embedder)
         self.collection_name = collection_name
 
+        # Perform indexing only once at initialization (if data_path provided)
+        if data_path and self._is_vector_store_empty():
+            self._index_all_pdfs(data_path)
+        else:
+            print("Using existing Qdrant vector store, skipping indexing.")
+
     def _is_vector_store_empty(self):
         """Check if the vector store collection already contains points."""
-        count = self.vector_store.client.count(collection_name=self.collection_name).count
-        return count == 0
+        try:
+            count = self.vector_store.client.count(collection_name=self.collection_name).count
+            return count == 0
+        except Exception:
+            return True
 
-    def index_document(self, file_path):
+    def _index_all_pdfs(self, data_path):
         """
-        Load a PDF document, split into chunks, embed, and store in Qdrant.
-        If data already exists in vector store, skip indexing.
+        Load all PDF documents in the directory (including subfolders),
+        split into chunks, embed, and store in Qdrant.
         """
-        if not self._is_vector_store_empty():
-            print("Vector store already contains data. Skipping indexing.")
+        pdf_files = glob.glob(os.path.join(data_path, "**", "*.pdf"), recursive=True)
+
+        if not pdf_files:
+            print(f"No PDF files found in directory: {data_path}")
             return
 
-        text = load_pdf(file_path)
-        chunks = chunk_text(text)
-        embeddings = self.embedder.embed(chunks)
-        self.vector_store.add(embeddings, chunks)
-        print(f"Indexed {len(chunks)} chunks from {file_path} into persistent Qdrant storage.")
+        all_chunks = []
+        all_embeddings = []
+
+        print(f"Found {len(pdf_files)} PDF(s). Processing...")
+        for file_path in pdf_files:
+            try:
+                print(f"🔹 Reading: {file_path}")
+                text = load_pdf(file_path)
+                if not text.strip():
+                    print(f"Skipping empty PDF: {file_path}")
+                    continue
+
+                chunks = chunk_text(text)
+                embeddings = self.embedder.embed(chunks)
+
+                all_chunks.extend(chunks)
+                all_embeddings.extend(embeddings)
+
+            except Exception as e:
+                print(f"Error reading {file_path}: {e}")
+                continue
+
+        if all_chunks:
+            self.vector_store.add(all_embeddings, all_chunks)
+            print(f"Indexed {len(all_chunks)} chunks from {len(pdf_files)} PDFs into persistent Qdrant storage.")
+        else:
+            print("No valid PDF content to index.")
 
     def answer_question(self, query, top_k=3):
         """
