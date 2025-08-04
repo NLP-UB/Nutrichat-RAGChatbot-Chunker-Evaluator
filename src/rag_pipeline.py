@@ -5,6 +5,7 @@ from .embedder import Embedder
 from .vector_store import VectorStore
 from .retriever import Retriever
 from .generator import Generator
+from .ner_processor import NERProcessor
 
 class RAGPipeline:
     def __init__(self, data_path="data", embed_model='all-MiniLM-L6-v2', gen_model='google/flan-t5-base',
@@ -24,6 +25,7 @@ class RAGPipeline:
         self.vector_store = VectorStore(384, storage_path=storage_path, collection_name=collection_name)
         self.retriever = Retriever(self.vector_store, self.embedder)
         self.collection_name = collection_name
+        self.ner = NERProcessor()
 
         # Perform indexing only once at initialization (if data_path provided)
         if data_path and self._is_vector_store_empty():
@@ -62,7 +64,10 @@ class RAGPipeline:
                     print(f"Skipping empty PDF: {file_path}")
                     continue
 
-                chunks = chunk_text(text,method=self.collection_name, chunk_size=500, overlap=50)
+                chunks = chunk_text(text, method=self.collection_name, chunk_size=500, overlap=50)
+
+                chunks = self.ner.process_chunks(chunks)
+
                 embeddings = self.embedder.embed(chunks)
 
                 all_chunks.extend(chunks)
