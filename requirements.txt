@@ -11,4 +11,7 @@ accelerate
 bitsandbytes
 jupyter
 wheel
+transformers>=4.40.0
+torch
+qdrant-client
 # flash-attn
