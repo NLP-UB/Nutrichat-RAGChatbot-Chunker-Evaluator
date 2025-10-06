@@ -9,7 +9,7 @@ from .ner_processor import NERProcessor
 
 class RAGPipeline:
     def __init__(self, data_path="data", embed_model='all-MiniLM-L6-v2', gen_model='google/flan-t5-base',
-                 storage_path="./qdrant_storage", collection_name="recursive"):
+                 storage_path="./qdrant_storage", collection_name="semantic"):
         """
         RAG Pipeline that uses Qdrant persistent storage for embeddings.
 
@@ -52,6 +52,16 @@ class RAGPipeline:
             print(f"No PDF files found in directory: {data_path}")
             return
 
+        # 🔹 Kosongkan dulu koleksi biar tidak duplikat
+        try:
+            self.vector_store.client.delete(
+                collection_name=self.collection_name,
+                points_selector={"filter": {}}  # hapus semua point
+            )
+            print(f"Cleared existing data in collection: {self.collection_name}")
+        except Exception as e:
+            print(f"Warning: could not clear collection ({e})")
+
         all_chunks = []
         all_embeddings = []
 
@@ -66,9 +76,9 @@ class RAGPipeline:
 
                 chunks = chunk_text(text, method=self.collection_name, chunk_size=500, overlap=50)
 
-                chunks = self.ner.process_chunks(chunks)
+                # chunks = self.ner.process_chunks(chunks)
 
-                embeddings = self.embedder.embed(chunks)
+                embeddings = self.embedder.embed_documents(chunks)
 
                 all_chunks.extend(chunks)
                 all_embeddings.extend(embeddings)
@@ -90,3 +100,24 @@ class RAGPipeline:
         retrieved = self.retriever.retrieve(query, top_k)
         context = " ".join([r[0] for r in retrieved])
         return self.generator.generate(context, query)
+    
+    def answer_question_with_context(self, query, top_k=3):
+        """
+        Retrieve context and generate an answer using the generator model.
+        Returns:
+            [answer_text, list_of_top_texts]
+        """
+        # Retrieve top-k documents
+        retrieved = self.retriever.retrieve(query, top_k)
+        
+        # Extract only the text parts for context
+        top_texts = [r[0] for r in retrieved]
+        
+        # Combine all texts to feed into the generator
+        context = " ".join(top_texts)
+        
+        # Generate answer
+        answer = self.generator.generate(context, query)
+        
+        # Return answer and top retrieved texts as a 2-element list
+        return [answer, top_texts]

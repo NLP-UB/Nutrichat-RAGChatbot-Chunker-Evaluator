@@ -2,3 +2,5 @@ video_notebooks/*
 src/__pycache__/*
 data/*
 qdrant_storage/*
+outputs/*
+max_min_semantic_chunking.py

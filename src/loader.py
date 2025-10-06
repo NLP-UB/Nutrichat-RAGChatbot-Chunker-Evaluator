@@ -1,6 +1,11 @@
 import re
 from sentence_transformers import SentenceTransformer, util
 import fitz  # PyMuPDF
+from llama_index.core.node_parser import (
+    SemanticDoubleMergingSplitterNodeParser,
+    LanguageConfig,
+)
+from llama_index.core import Document
 
 def load_pdf(file_path):
     text = ""
@@ -22,7 +27,7 @@ def chunk_text(
     text,
     chunk_size=500,
     overlap=50,
-    method="character",  # Options: "character", "recursive", "document", "semantic"
+    method="character",  # Options: "character", "recursive", "document", "semantic", "doublepass"
     separators=["\n\n", "\n", ".", " ", ""],
     model_name="all-MiniLM-L6-v2"
 ):
@@ -127,8 +132,27 @@ def chunk_text(
         if current_chunk:
             chunks.append(" ".join(current_chunk))
 
+    elif method == "doublepass":
+        config = LanguageConfig(language="english", spacy_model="en_core_web_md")
+        splitter = SemanticDoubleMergingSplitterNodeParser(
+            language_config=config,
+            initial_threshold=0.4,
+            appending_threshold=0.5,
+            merging_threshold=0.5,
+            max_chunk_size=5000,
+        )
+        # Bungkus teks jadi Document
+        document = Document(text=text)
+
+        # Split jadi nodes
+        nodes = splitter.get_nodes_from_documents([document])
+
+        # Ambil konten tiap node ke dalam chunks
+        chunks = [node.get_content() for node in nodes]
+        
     else:
         raise ValueError(f"Invalid chunking method: {method}. Choose from "
                          f"['character', 'recursive', 'document', 'semantic'].")
 
+    chunks = list(dict.fromkeys(chunks))
     return [c.strip() for c in chunks if c.strip()]
