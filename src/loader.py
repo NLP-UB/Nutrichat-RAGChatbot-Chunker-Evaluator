@@ -1,4 +1,5 @@
 import re
+import numpy as np
 from sentence_transformers import SentenceTransformer, util
 import fitz  # PyMuPDF
 from llama_index.core.node_parser import (
@@ -29,7 +30,6 @@ def chunk_text(
     overlap=50,
     method="character",  # Options: "character", "recursive", "document", "semantic", "doublepass"
     separators=["\n\n", "\n", ".", " ", ""],
-    model_name="all-MiniLM-L6-v2"
 ):
     """
     Splits text into chunks based on the selected chunking method.
@@ -114,9 +114,11 @@ def chunk_text(
     # Method 4: Semantic Splitting (Embedding-based)
     # ------------------------------
     elif method == "semantic":
-        model = SentenceTransformer(model_name)
+        from .embedder import Embedder
+        embedder = Embedder()
         sentences = re.split(r'(?<=[.!?]) +', text)
-        embeddings = model.encode(sentences, convert_to_tensor=True)
+        embeddings = embedder.embed_documents(sentences)
+        embeddings = np.array(embeddings)
 
         current_chunk = [sentences[0]]
         current_emb = embeddings[0]

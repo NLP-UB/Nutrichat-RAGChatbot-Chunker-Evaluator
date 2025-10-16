@@ -5,20 +5,31 @@ OUTPUT="./outputs/$TIMESTAMP"
 
 METHODS=("semantic" "recursive" "doublepass")
 
-# 1. Start qdrant in its own tmux session (sequential)
+# 1. Start Ollama in its own tmux session (first)
+OLLAMA_SESSION="ollama"
+if tmux has-session -t $OLLAMA_SESSION 2>/dev/null; then
+  echo "⚠️ Ollama session already running."
+else
+  echo "🚀 Starting Ollama server in tmux session: $OLLAMA_SESSION"
+  tmux new-session -d -s "$OLLAMA_SESSION" "~/ollama/bin/ollama serve; read"
+  # Wait for Ollama to start
+  sleep 10
+fi
+
+# 1. Start qdrant in its own tmux session
 QDRANT_SESSION="qdrant"
 if tmux has-session -t $QDRANT_SESSION 2>/dev/null; then
   echo "⚠️ Qdrant session already running."
 else
   echo "🚀 Starting Qdrant server in tmux session: $QDRANT_SESSION"
   tmux new-session -d -s "$QDRANT_SESSION" "./qdrant; read"
-  # wait a bit for qdrant to be ready
+  # Wait for qdrant to be ready
   sleep 5
 fi
 
 # 2. Run experiments in parallel tmux sessions
 for method in "${METHODS[@]}"; do
-  session="eval_$method"
+  session="eval-$method"
   echo "🚀 Starting tmux session: $session"
   tmux new-session -d -s "$session" \
     "python evaluate_method.py $method $DATASET $OUTPUT false; read"
@@ -26,3 +37,4 @@ done
 
 echo "✅ All experiments launched."
 echo "👉 Use 'tmux ls' to see sessions."
+echo "👉 Use 'tmux attach -t ollama' to view Ollama logs"

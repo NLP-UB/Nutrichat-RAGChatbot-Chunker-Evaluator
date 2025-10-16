@@ -1,11 +1,13 @@
-from sentence_transformers import SentenceTransformer
+from langchain_community.embeddings import OllamaEmbeddings
 
 class Embedder:
-    def __init__(self, model_name='all-MiniLM-L6-v2'):
-        self.model = SentenceTransformer(model_name)
+    def __init__(self, model_name="embeddinggemma"):
+        self.model = OllamaEmbeddings(model=model_name, base_url="http://localhost:11435")
 
     def embed_query(self, text: str):
-        return self.model.encode([text])[0]
+        # langsung return embedding dari query
+        return self.model.embed_query(text)
 
     def embed_documents(self, texts: list):
-        return self.model.encode(texts, show_progress_bar=True)
+        # embed_documents sudah disediakan
+        return self.model.embed_documents(texts)

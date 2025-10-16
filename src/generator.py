@@ -1,10 +1,23 @@
-from transformers import pipeline
+import re
+import ollama
 
 class Generator:
-    def __init__(self, model_name='google/flan-t5-base'):
-        self.model = pipeline('text2text-generation', model=model_name)
+    def __init__(self, model_name="gpt-oss"):
+        self.model_name = model_name
 
     def generate(self, context, question):
-        prompt = f"Answer the question based on context:\nContext: {context}\nQuestion: {question}\nAnswer:"
-        result = self.model(prompt, max_length=256, truncation=True)
-        return result[0]['generated_text']
+        formatted_prompt = f"Question: {question}\n\nContext: {context}"
+
+        response = ollama.chat(
+            model=self.model_name,
+            messages=[{"role": "user", "content": formatted_prompt}],
+        )
+
+        response_content = response["message"]["content"]
+
+        # hapus isi <think>...</think>
+        final_answer = re.sub(
+            r"<think>.*?</think>", "", response_content, flags=re.DOTALL
+        ).strip()
+
+        return final_answer

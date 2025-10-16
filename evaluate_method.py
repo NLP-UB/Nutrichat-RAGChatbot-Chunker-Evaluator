@@ -24,7 +24,7 @@ class MethodEvaluator:
         self.method_name = method_name
         self.dataset = dataset_path
         self.pipeline = RAGPipeline(collection_name=method_name)
-        self.llm = OllamaLLM(model="llama3.1")
+        self.llm = OllamaLLM(model="gpt-oss")
         self.embedder = Embedder()
         self.run_timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         self.csv_name = f"{output_dir}/result_{method_name}_{self.run_timestamp}.csv"
@@ -72,6 +72,7 @@ class MethodEvaluator:
             dataset=dataset,
             llm=self.llm,
             embeddings=self.embedder,
+            batch_size = 16,
             metrics=[context_precision, context_recall, faithfulness, answer_relevancy]
         )
 
@@ -171,4 +172,4 @@ if __name__ == "__main__":
         f.write(results['Overall'].to_string(index=False))
 
     # --- Print ke stdout ---
-    print(open(txt_output).read())
+    print(f"✅ Evaluaton finished for {method_name}")

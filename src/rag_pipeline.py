@@ -8,7 +8,7 @@ from .generator import Generator
 from .ner_processor import NERProcessor
 
 class RAGPipeline:
-    def __init__(self, data_path="data", embed_model='all-MiniLM-L6-v2', gen_model='google/flan-t5-base',
+    def __init__(self, data_path="data", embed_model='embeddinggemma', gen_model='gpt-oss',
                  storage_path="./qdrant_storage", collection_name="semantic"):
         """
         RAG Pipeline that uses Qdrant persistent storage for embeddings.
@@ -22,7 +22,7 @@ class RAGPipeline:
         """
         self.embedder = Embedder(embed_model)
         self.generator = Generator(gen_model)
-        self.vector_store = VectorStore(384, storage_path=storage_path, collection_name=collection_name)
+        self.vector_store = VectorStore(768, storage_path=storage_path, collection_name=collection_name)
         self.retriever = Retriever(self.vector_store, self.embedder)
         self.collection_name = collection_name
         self.ner = NERProcessor()
