@@ -6,7 +6,7 @@ class Generator:
         self.model_name = model_name
 
     def generate(self, context, question):
-        formatted_prompt = f"Question: {question}\n\nContext: {context}"
+        formatted_prompt = f"Pertanyaan: {question}\n\nKonteks: {context} \n\nFormat jawaban: 1 paragraf ringkas padat jelas"
 
         response = ollama.chat(
             model=self.model_name,
