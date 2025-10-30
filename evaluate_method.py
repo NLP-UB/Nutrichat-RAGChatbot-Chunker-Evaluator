@@ -12,6 +12,7 @@ from datetime import datetime
 
 # RAGas imports
 from ragas import evaluate as ragas_evaluate
+from ragas.run_config import RunConfig
 from ragas.metrics import (
     faithfulness,
     answer_relevancy,
@@ -72,7 +73,8 @@ class MethodEvaluator:
             dataset=dataset,
             llm=self.llm,
             embeddings=self.embedder,
-            batch_size = 16,
+            batch_size = 32,
+            run_config=RunConfig(timeout=7200),
             metrics=[context_precision, context_recall, faithfulness, answer_relevancy]
         )
 

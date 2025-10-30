@@ -1,6 +1,6 @@
 import re
 import numpy as np
-from sentence_transformers import SentenceTransformer, util
+from sentence_transformers import util
 import fitz  # PyMuPDF
 from llama_index.core.node_parser import (
     SemanticDoubleMergingSplitterNodeParser,
@@ -87,7 +87,7 @@ def chunk_text(
         temp = ""
         for part in all_parts:
             if len(temp) + len(part) + 1 <= chunk_size:
-                temp += part + " "
+                temp += " " + part
             else:
                 chunks.append(temp.strip())
                 temp = part

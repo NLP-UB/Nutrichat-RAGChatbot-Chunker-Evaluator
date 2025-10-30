@@ -6,3 +6,7 @@ storage/*
 outputs/*
 max_min_semantic_chunking.py
 qdrant
+playground.py
+playground2.py
+playground3.py
+*.xlsx

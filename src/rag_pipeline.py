@@ -25,7 +25,6 @@ class RAGPipeline:
         self.vector_store = VectorStore(768, storage_path=storage_path, collection_name=collection_name)
         self.retriever = Retriever(self.vector_store, self.embedder)
         self.collection_name = collection_name
-        self.ner = NERProcessor()
 
         # Perform indexing only once at initialization (if data_path provided)
         if data_path and self._is_vector_store_empty():
