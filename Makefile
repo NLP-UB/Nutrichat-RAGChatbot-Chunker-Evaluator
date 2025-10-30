@@ -1,6 +1,6 @@
 SCRIPTS := scripts
 
-.PHONY: evaluate kill check-semantic check-doublepass check-recursive test
+.PHONY: evaluate kill semantic doublepass recursive test qdrant ollama
 
 kill:
 	bash $(SCRIPTS)/kill-eval.sh
@@ -8,14 +8,20 @@ kill:
 evaluate:
 	bash $(SCRIPTS)/evaluator.sh
 
-check-semantic:
+semantic:
 	tmux attach -t eval-semantic
 
-check-recursive:
+recursive:
 	tmux attach -t eval-recursive
 	
-check-doublepass:
+doublepass:
 	tmux attach -t eval-doublepass
 
 test:
 	bash $(SCRIPTS)/whichisit.sh
+
+qdrant:
+	tmux attach -t qdrant
+
+ollama:
+	tmux attach -t ollama
