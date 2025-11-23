@@ -73,7 +73,7 @@ class RAGPipeline:
                     print(f"Skipping empty PDF: {file_path}")
                     continue
 
-                chunks = chunk_text(text, method=self.collection_name, chunk_size=500, overlap=50)
+                chunks = chunk_text(text, method=self.collection_name, chunk_size=1000, overlap=50)
 
                 # chunks = self.ner.process_chunks(chunks)
 
