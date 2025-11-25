@@ -18,8 +18,7 @@ def load_pdf(file_path):
 def chunk_text(
     text,
     chunk_size=500,
-    overlap=50,
-    method="character",  # Options: "character", "recursive", "document", "semantic", "doublepass"
+    method="recursive",  # Options: "recursive", "semantic", "doublepass"
     separators=["\n\n", "\n", ".", " ", ""],
 ):
     """
@@ -28,15 +27,12 @@ def chunk_text(
     Parameters:
         text (str): The input text to split
         chunk_size (int): Max characters per chunk (for non-semantic methods)
-        overlap (int): Overlap between chunks
         method (str): Chunking method name
                       Options:
-                        - "character"  : Simple static character chunks
                         - "recursive"  : Recursive chunking based on separators
-                        - "document"   : Heuristics for PDFs, Markdown, or code blocks
                         - "semantic"   : Embedding-based semantic chunking
+                        - "doublepass" : New method for chunking documents
         separators (list): Separators for recursive splitting
-        model_name (str): Model for semantic similarity (only used if method="semantic")
 
     Returns:
         list: List of text chunks
@@ -45,19 +41,9 @@ def chunk_text(
     chunks = []
 
     # ------------------------------
-    # Method 1: Simple Character Splitting
+    # Method 1: Recursive Character Text Splitting
     # ------------------------------
-    if method == "character":
-        start = 0
-        while start < len(text):
-            end = min(start + chunk_size, len(text))
-            chunks.append(text[start:end])
-            start += chunk_size - overlap
-
-    # ------------------------------
-    # Method 2: Recursive Character Text Splitting
-    # ------------------------------
-    elif method == "recursive":
+    if method == "recursive":
         def recursive_split(text, separators):
             if not separators:
                 return [text]
@@ -86,23 +72,7 @@ def chunk_text(
             chunks.append(temp.strip())
 
     # ------------------------------
-    # Method 3: Document-Specific Splitting
-    # ------------------------------
-    elif method == "document":
-        # Basic heuristic for structured docs
-        parts = re.split(r"(?:\n\s*\n|```.*?```)", text)
-        temp = ""
-        for part in parts:
-            if len(temp) + len(part) <= chunk_size:
-                temp += part + "\n"
-            else:
-                chunks.append(temp.strip())
-                temp = part
-        if temp:
-            chunks.append(temp.strip())
-
-    # ------------------------------
-    # Method 4: Semantic Splitting (Embedding-based)
+    # Method 2: Semantic Splitting (Embedding-based)
     # ------------------------------
     elif method == "semantic":
         from .embedder import Embedder
@@ -125,6 +95,9 @@ def chunk_text(
         if current_chunk:
             chunks.append(" ".join(current_chunk))
 
+    # ------------------------------
+    # Method 3: Double Pass Merging Chunking
+    # ------------------------------
     elif method == "doublepass":
         config = LanguageConfig(language="english", spacy_model="en_core_web_md")
         splitter = SemanticDoubleMergingSplitterNodeParser(
