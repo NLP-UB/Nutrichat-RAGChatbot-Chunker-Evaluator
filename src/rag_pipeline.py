@@ -5,7 +5,6 @@ from .embedder import Embedder
 from .vector_store import VectorStore
 from .retriever import Retriever
 from .generator import Generator
-from .ner_processor import NERProcessor
 
 class RAGPipeline:
     def __init__(self, data_path="data", embed_model='embeddinggemma', gen_model='gpt-oss',
@@ -74,8 +73,6 @@ class RAGPipeline:
                     continue
 
                 chunks = chunk_text(text, method=self.collection_name, chunk_size=1000)
-
-                # chunks = self.ner.process_chunks(chunks)
 
                 embeddings = self.embedder.embed_documents(chunks)
 
