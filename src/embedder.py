@@ -12,7 +12,6 @@ class Embedder:
         # embed_documents sudah disediakan
         return self.model.embed_documents(texts)
 
-    # --- New function ---
     def embed_text_with_values(self, text: str):
         """
         Takes a single text string and returns a dictionary with:
