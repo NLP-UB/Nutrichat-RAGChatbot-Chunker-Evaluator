@@ -35,10 +35,13 @@ class VectorStore:
         # Ensure collection exists
         collections = [col.name for col in self.client.get_collections().collections]
         if collection_name not in collections:
-            self.client.recreate_collection(
+            print(f"Collection '{collection_name}' does not exist. Creating it.")
+            self.client.create_collection(
                 collection_name=self.collection_name,
                 vectors_config=VectorParams(size=dimension, distance=Distance.COSINE)
             )
+        else:
+            print(f"Collection '{collection_name}' already exists. No need to recreate.")
 
     def add(self, embeddings, texts, batch_size=256):
         for i in range(0, len(embeddings), batch_size):

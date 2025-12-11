@@ -1,11 +1,14 @@
 SCRIPTS := scripts
 
-.PHONY: evaluate kill semantic doublepass recursive test qdrant ollama
+.PHONY: idx eval kill semantic doublepass recursive test qdrant ollama
 
 kill:
 	bash $(SCRIPTS)/kill-eval.sh
 
-evaluate:
+idx:
+	bash $(SCRIPTS)/indexer.sh
+
+eval:
 	bash $(SCRIPTS)/evaluator.sh
 
 semantic:

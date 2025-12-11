@@ -9,6 +9,7 @@ from datasets import Dataset
 from src.embedder import Embedder
 from langchain_ollama import OllamaLLM
 from datetime import datetime
+from index_data import Indexer
 
 # RAGas imports
 from ragas import evaluate as ragas_evaluate
@@ -21,14 +22,19 @@ from ragas.metrics import (
 )
 
 class MethodEvaluator:
-    def __init__(self, method_name, dataset_path):
+    def __init__(self, df, method_name, embedder_model, format_index, format):
         self.method_name = method_name
-        self.dataset = dataset_path
-        self.pipeline = RAGPipeline(collection_name=method_name)
+        self.embedder = Embedder(embedder_model)
+        self.embedder_model = embedder_model
+        self.format = format
+        self.dataset = df
+        collection_name_format = f"{method_name}_{embedder_model}"
+        self.indexer = Indexer(embedder_name=embedder_model, method_name=method_name, collection_name=collection_name_format)
+        self.pipeline = RAGPipeline(embedder=self.embedder, indexer=self.indexer, format=format)
         self.llm = OllamaLLM(model="gpt-oss")
-        self.embedder = Embedder()
         self.run_timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-        self.csv_name = f"{output_dir}/result_{method_name}_{self.run_timestamp}.csv"
+        self.file_string_format = f"result_{method_name}_{embedder_model}_{format_index}_{self.run_timestamp}"
+        self.csv_name = f"{self.file_string_format}.csv"
 
         self.ragas_data = {
             "user_input": [],
@@ -101,6 +107,8 @@ class MethodEvaluator:
         avg_answer_relevancy = np.nanmean(self.result_df["answer_relevancy"].fillna(0)) if "answer_relevancy" in self.result_df else 0
         return {
             "method": self.method_name,
+            "embedder": self.embedder_model,
+            "format": self.format,
             "BLEU": avg_bleu,
             "ROUGE-1": avg_rouge1,
             "ROUGE-2": avg_rouge2,
@@ -113,17 +121,20 @@ class MethodEvaluator:
         }
 
 if __name__ == "__main__":
-    method_name = sys.argv[1]
-    dataset_path = sys.argv[2]
-    output_dir = sys.argv[3]
-    only_head = sys.argv[4].lower() in ["true", "1", "yes"]
+    qna_path = sys.argv[1]
+    method_name = sys.argv[2]
+    embedder_model = sys.argv[3]
+    format_index = sys.argv[4]
+    format = sys.argv[5]
+    output_dir = sys.argv[6]
+    only_head = sys.argv[7].lower() in ["true", "1", "yes"]
 
     os.makedirs(output_dir, exist_ok=True)
-    df = pd.read_csv(dataset_path)
-    evaluator = MethodEvaluator(method_name, df)
+    df = pd.read_csv(qna_path)
+    evaluator = MethodEvaluator(df=df, method_name=method_name, embedder_model=embedder_model, format_index=format_index, format=format)
     results = evaluator.run(onlyhead=only_head)
     # --- Save MD per method ---
-    md_output = f"{output_dir}/result_{method_name}_{evaluator.run_timestamp}.md"
+    md_output = f"{output_dir}/{evaluator.file_string_format}.md"
     with open(md_output, "w", encoding="utf-8") as f:
         for i, row in evaluator.result_df.iterrows():
             f.write(f"# Question {i+1}\n\n")
@@ -155,10 +166,12 @@ if __name__ == "__main__":
 
         f.write("\n---\n\n")
     # --- Save TXT per method ---
-    txt_output = f"{output_dir}/result_{method_name}_{evaluator.run_timestamp}.txt"
+    txt_output = f"{output_dir}/{evaluator.file_string_format}.txt"
     with open(txt_output, "w") as f:
         f.write(f"----------------------------------------\n")
         f.write(f"Method Used: {results['method']}\n")
+        f.write(f"Embedder Used: {results['embedder']}\n")
+        f.write(f"Prompt Format Used: {results['format']}\n")
         f.write(f"----------------------------------------\n")
         f.write(f"\nBasic Metrics:\n")
         f.write(f"Overall Average BLEU: {results['BLEU']:.2f}\n")
@@ -174,4 +187,4 @@ if __name__ == "__main__":
         f.write(results['Overall'].to_string(index=False))
 
     # --- Print ke stdout ---
-    print(f"✅ Evaluaton finished for {method_name}")
+    print(f"✅ Evaluaton finished for {method_name} with embedder {embedder_model} and prompt format {format_index}")

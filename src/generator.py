@@ -2,11 +2,12 @@ import re
 import ollama
 
 class Generator:
-    def __init__(self, model_name="gpt-oss"):
+    def __init__(self, model_name="gpt-oss", format="1 paragraf ringkas padat jelas"):
         self.model_name = model_name
+        self.format = format
 
     def generate(self, context, question):
-        formatted_prompt = f"Pertanyaan: {question}\n\nKonteks: {context} \n\nFormat jawaban: 1 paragraf ringkas padat jelas"
+        formatted_prompt = f"Pertanyaan: {question}\n\nKonteks: {context} \n\nFormat jawaban: {format}"
 
         response = ollama.chat(
             model=self.model_name,

@@ -1,16 +1,8 @@
-#!/bin/bash
-QnA="data/ground-truth/QA-Dataset.csv"
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 OUTPUT="./outputs/$TIMESTAMP"
 
 METHODS=("semantic" "recursive" "doublepass")
 EMBEDDERS=("embeddinggemma" "all-minilm" "qwen3-embedding")
-
-declare -A FORMATS=(
-  [0]="1 paragraf ringkas padat jelas"
-  [1]="poin utama dan penjelasan singkat"
-  [2]="jawaban dalam bentuk tabel teks"
-)
 
 # 1. Start Ollama in its own tmux session (first)
 OLLAMA_SESSION="ollama"
@@ -36,13 +28,10 @@ fi
 
 for method in "${METHODS[@]}"; do
   for embedder in "${EMBEDDERS[@]}"; do
-    for format_index in "${!FORMATS[@]}"; do
-      format="${FORMATS[$format_index]}"
-      session="eval-$method-$embedder-$format_index"
-      echo "🚀 Starting tmux session: $session"
-      tmux new-session -d -s "$session" \
-        "python evaluate_method.py $QnA $method $embedder $format_index $format $OUTPUT true; read"
-    done
+    session="index-$method-$embedder"
+    echo "🚀 Starting tmux session: $session"
+    tmux new-session -d -s "$session" \
+      "python index_data.py $method $embedder; read"
   done
 done
 
