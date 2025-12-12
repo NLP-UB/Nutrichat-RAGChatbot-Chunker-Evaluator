@@ -15,6 +15,17 @@ declare -A METHOD_PORT=(
   ["doublepass"]=11437
 )
 
+# 1. Start Ollama in its own tmux session (first)
+OLLAMA_SESSION="ollama"
+if tmux has-session -t $OLLAMA_SESSION 2>/dev/null; then
+  echo "⚠️ Ollama session already running."
+else
+  echo "🚀 Starting Ollama server in tmux session: $OLLAMA_SESSION"
+  tmux new-session -d -s "$OLLAMA_SESSION" "export OLLAMA_HOST=127.0.0.1:11434; ~/ollama/bin/ollama serve; read"
+  # Wait for Ollama to start
+  sleep 10
+fi
+
 # ----------------------------
 # 1. Start 3 Ollama Servers
 # ----------------------------
