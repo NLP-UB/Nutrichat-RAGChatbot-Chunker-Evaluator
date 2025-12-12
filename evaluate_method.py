@@ -22,7 +22,7 @@ from ragas.metrics import (
 )
 
 class MethodEvaluator:
-    def __init__(self, df, method_name, embedder_model, format_index, format):
+    def __init__(self, df: pd.DataFrame, method_name, embedder_model, format_index, format):
         self.method_name = method_name
         self.embedder = Embedder(embedder_model)
         self.embedder_model = embedder_model
@@ -46,7 +46,7 @@ class MethodEvaluator:
         self.bleu_scores, self.rouge1_scores, self.rouge2_scores, self.rougeL_scores = [], [], [], []
 
     def run(self, onlyhead:bool = False):
-        data_iter = self.dataset.head() if onlyhead else self.dataset
+        data_iter = self.dataset.head() if onlyhead else self.dataset.head(100)
         for i, row in data_iter.iterrows():
             print(f"---- Iteration-{i+1} ----")
             question = row["question"]
@@ -80,7 +80,7 @@ class MethodEvaluator:
             llm=self.llm,
             embeddings=self.embedder,
             batch_size = 32,
-            run_config=RunConfig(timeout=7200),
+            run_config=RunConfig(timeout=600),
             metrics=[context_precision, context_recall, faithfulness, answer_relevancy]
         )
 
