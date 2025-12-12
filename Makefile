@@ -1,6 +1,6 @@
 SCRIPTS := scripts
 
-.PHONY: idx eval kill semantic doublepass recursive test qdrant ollama count
+.PHONY: idx eval kill semantic doublepass recursive test qdrant ollama count users
 
 kill:
 	bash $(SCRIPTS)/kill-eval.sh
@@ -54,7 +54,9 @@ o-2:
 2-2:
 	tmux attach -t eval-doublepass-qwen3-embedding
 
-
+users:
+	nvidia-smi --query-compute-apps=pid --format=csv,noheader | \
+	xargs -I{} ps -o user= -p {} | sort | uniq
 
 count:
 	ls -l outputs/2025-12-12_14-04-57 | wc -l

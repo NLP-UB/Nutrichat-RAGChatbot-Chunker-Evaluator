@@ -4,26 +4,14 @@
 # CONFIG
 # ================================
 QnA="data/ground-truth/QA-Dataset.csv"
-TIMESTAMP=2025-12-12_14-04-57
+TIMESTAMP=2025-12-12_17-03-35
 
-# Custom output directory (set custom name)
 OUTPUT="./outputs/$TIMESTAMP"
 mkdir -p "$OUTPUT"
 
-# Choose only ONE method
-METHOD="recursive"   # <-- ubah ke: semantic | recursive | doublepass
-
-# Available embedder models
+METHOD="doublepass"   # semantic | recursive | doublepass
 EMBEDDERS=("embeddinggemma" "all-minilm" "qwen3-embedding")
 
-# Output formats
-declare -A FORMATS=(
-  [0]="1 paragraf ringkas padat jelas"
-  [1]="poin utama dan penjelasan singkat"
-  [2]="jawaban dalam bentuk tabel teks"
-)
-
-# Dedicated port for each method
 declare -A METHOD_PORT=(
   ["semantic"]=11435
   ["recursive"]=11436
@@ -31,7 +19,7 @@ declare -A METHOD_PORT=(
 )
 
 # ================================
-# 1. Start Ollama Server (only 1)
+# 1. Start Ollama
 # ================================
 echo "🚀 Starting Ollama for method: $METHOD"
 
@@ -48,7 +36,7 @@ else
 fi
 
 # ================================
-# 2. Start Qdrant (only 1)
+# 2. Start Qdrant
 # ================================
 QDRANT_SESSION="qdrant"
 
@@ -61,32 +49,26 @@ else
 fi
 
 # ================================
-# 3. Run evaluations 
-#    (method × embedder × format)
+# 3. Run Evaluations (method × embedder)
 # ================================
 echo "🚀 Launching evaluation sessions..."
 
 ollama_url="http://127.0.0.1:$port"
 
 for embedder in "${EMBEDDERS[@]}"; do
-    for format_index in "${!FORMATS[@]}"; do
-        
-        format="${FORMATS[$format_index]}"
-        session="eval-$METHOD-$embedder-$format_index"
 
-        echo "  🔹 Starting: $session"
+    session="eval-$METHOD-$embedder"
+    echo "  🔹 Starting: $session"
 
-        tmux new-session -d -s "$session" \
-            "python evaluate_method.py \
-                $QnA \
-                $METHOD \
-                $embedder \
-                $format_index \
-                \"$format\" \
-                $OUTPUT \
-                $ollama_url \
-                true; read"
-    done
+    tmux new-session -d -s "$session" \
+        "python evaluate_method.py \
+            $QnA \
+            $METHOD \
+            $embedder \
+            $OUTPUT \
+            $ollama_url \
+            true; read"
+
 done
 
 echo "✅ Lite evaluation started!"
