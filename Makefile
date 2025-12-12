@@ -10,6 +10,8 @@ idx:
 
 eval:
 	bash $(SCRIPTS)/evaluator.sh
+leval:
+	bash $(SCRIPTS)/lite-evaluator.sh
 
 semantic:
 	tmux attach -t eval-semantic
