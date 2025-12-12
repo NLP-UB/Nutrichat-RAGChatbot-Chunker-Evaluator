@@ -22,18 +22,17 @@ from ragas.metrics import (
 )
 
 class MethodEvaluator:
-    def __init__(self, df: pd.DataFrame, method_name, embedder_model, format_index, format, ollama_url):
+    def __init__(self, df: pd.DataFrame, method_name, embedder_model, ollama_url):
         self.method_name = method_name
         self.embedder = Embedder(embedder_model, base_url=ollama_url)
         self.embedder_model = embedder_model
-        self.format = format
         self.dataset = df
         collection_name_format = f"{method_name}_{embedder_model}"
         self.indexer = Indexer(embedder_name=embedder_model, base_url=ollama_url, method_name=method_name, collection_name=collection_name_format)
-        self.pipeline = RAGPipeline(embedder=self.embedder, indexer=self.indexer, format=format, base_url=ollama_url)
+        self.pipeline = RAGPipeline(embedder=self.embedder, indexer=self.indexer, base_url=ollama_url)
         self.llm = OllamaLLM(model="gpt-oss", base_url=ollama_url)
         self.run_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        self.file_string_format = f"result_{method_name}_{embedder_model}_{format_index}_{self.run_timestamp}"
+        self.file_string_format = f"result_{method_name}_{embedder_model}_{self.run_timestamp}"
 
         self.ragas_data = {
             "user_input": [],
@@ -108,7 +107,6 @@ class MethodEvaluator:
         return {
             "method": self.method_name,
             "embedder": self.embedder_model,
-            "format": self.format,
             "BLEU": avg_bleu,
             "ROUGE-1": avg_rouge1,
             "ROUGE-2": avg_rouge2,
@@ -124,17 +122,15 @@ if __name__ == "__main__":
     qna_path = sys.argv[1]
     method_name = sys.argv[2]
     embedder_model = sys.argv[3]
-    format_index = sys.argv[4]
-    format = sys.argv[5]
-    output_dir = sys.argv[6]
-    ollama_url = sys.argv[7]
-    only_head = sys.argv[8].lower() in ["true", "1", "yes"]
+    output_dir = sys.argv[4]
+    ollama_url = sys.argv[5]
+    only_head = sys.argv[6].lower() in ["true", "1", "yes"]
     print(f"Ollama url should be: {ollama_url}")
     print(f"Onlyhead should be: {only_head}")
 
     os.makedirs(output_dir, exist_ok=True)
     df = pd.read_csv(qna_path)
-    evaluator = MethodEvaluator(df=df, method_name=method_name, embedder_model=embedder_model, format_index=format_index, format=format, ollama_url=ollama_url)
+    evaluator = MethodEvaluator(df=df, method_name=method_name, embedder_model=embedder_model, ollama_url=ollama_url)
     results = evaluator.run(output_dir=output_dir, onlyhead=only_head)
     # --- Save MD per method ---
     md_output = f"{output_dir}/{evaluator.file_string_format}.md"
@@ -174,7 +170,6 @@ if __name__ == "__main__":
         f.write(f"----------------------------------------\n")
         f.write(f"Method Used: {results['method']}\n")
         f.write(f"Embedder Used: {results['embedder']}\n")
-        f.write(f"Prompt Format Used: {results['format']}\n")
         f.write(f"----------------------------------------\n")
         f.write(f"\nBasic Metrics:\n")
         f.write(f"Overall Average BLEU: {results['BLEU']:.2f}\n")
@@ -190,4 +185,4 @@ if __name__ == "__main__":
         f.write(results['Overall'].to_string(index=False))
 
     # --- Print ke stdout ---
-    print(f"✅ Evaluaton finished for {method_name} with embedder {embedder_model} and prompt format {format_index}")
+    print(f"✅ Evaluaton finished for {method_name} with embedder {embedder_model}")

@@ -3,14 +3,10 @@ QnA="data/ground-truth/QA-Dataset.csv"
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 OUTPUT="./outputs/$TIMESTAMP"
 
+mkdir -p "$OUTPUT"
+
 METHODS=("semantic" "recursive" "doublepass")
 EMBEDDERS=("embeddinggemma" "all-minilm" "qwen3-embedding")
-
-declare -A FORMATS=(
-  [0]="1 paragraf ringkas padat jelas"
-  [1]="poin utama dan penjelasan singkat"
-  [2]="jawaban dalam bentuk tabel teks"
-)
 
 # Map each method → a specific Ollama port
 declare -A METHOD_PORT=(
@@ -38,20 +34,20 @@ for method in "${METHODS[@]}"; do
     fi
 done
 
-# 1. Start qdrant in its own tmux session
+# ----------------------------
+# Start Qdrant
+# ----------------------------
 QDRANT_SESSION="qdrant"
 if tmux has-session -t $QDRANT_SESSION 2>/dev/null; then
   echo "⚠️ Qdrant session already running."
 else
-  echo "🚀 Starting Qdrant server in tmux session: $QDRANT_SESSION"
+  echo "🚀 Starting Qdrant server"
   tmux new-session -d -s "$QDRANT_SESSION" "./qdrant; read"
-  # Wait for qdrant to be ready
   sleep 5
 fi
 
 # ---------------------------------------------
-# 2. NORMAL 3×3×3 NESTED LOOPS (27 processes)
-#    but each method uses its OWN port
+# 2. 3×3 LOOP (method × embedder)
 # ---------------------------------------------
 echo "🚀 Launching evaluation processes..."
 
@@ -60,24 +56,19 @@ for method in "${METHODS[@]}"; do
   ollama_url="http://127.0.0.1:$port"
 
   for embedder in "${EMBEDDERS[@]}"; do
-    for format_index in "${!FORMATS[@]}"; do
 
-      format="${FORMATS[$format_index]}"
-      session="eval-$method-$embedder-$format_index"
+    session="eval-$method-$embedder"
 
-      echo "  🚀 Starting $session using $ollama_url"
+    echo "  🚀 Starting $session using $ollama_url"
 
-      tmux new-session -d -s "$session" \
-        "python evaluate_method.py \
-          $QnA \
-          $method \
-          $embedder \
-          $format_index \
-          \"$format\" \
-          $OUTPUT \
-          $ollama_url \
-          true; read"
-    done
+    tmux new-session -d -s "$session" \
+      "python evaluate_method.py \
+        $QnA \
+        $method \
+        $embedder \
+        $OUTPUT \
+        $ollama_url \
+        true; read"
   done
 done
 
