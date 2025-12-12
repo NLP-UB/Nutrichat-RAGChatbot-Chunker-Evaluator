@@ -1,8 +1,8 @@
 from langchain_ollama import OllamaEmbeddings
 
 class Embedder:
-    def __init__(self, model_name="embeddinggemma"):
-        self.model = OllamaEmbeddings(model=model_name, base_url="http://localhost:11434")
+    def __init__(self, model_name="embeddinggemma", base_url="http://localhost:11434"):
+        self.model = OllamaEmbeddings(model=model_name, base_url=base_url)
         self.dimension = None
 
     def embed_query(self, text: str):

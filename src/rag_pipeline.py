@@ -1,13 +1,10 @@
-import os
-import glob
 from .embedder import Embedder
-from .vector_store import VectorStore
 from .retriever import Retriever
 from .generator import Generator
 from index_data import Indexer
 
 class RAGPipeline:
-    def __init__(self, embedder: Embedder, indexer: Indexer, format, gen_model='gpt-oss'):
+    def __init__(self, embedder: Embedder, indexer: Indexer, format, base_url="http://127.0.0.1:11434", gen_model='gpt-oss'):
         """
         RAG Pipeline that uses Qdrant persistent storage for embeddings.
 
@@ -19,7 +16,7 @@ class RAGPipeline:
             collection_name (str): Name of Qdrant collection
         """
         self.indexer = indexer
-        self.generator = Generator(model_name=gen_model, format=format)
+        self.generator = Generator(model_name=gen_model, format=format, base_url=base_url)
         self.embedder = embedder
         self.retriever = Retriever(indexer.vector_store, self.embedder)
 

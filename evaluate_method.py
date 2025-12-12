@@ -22,19 +22,18 @@ from ragas.metrics import (
 )
 
 class MethodEvaluator:
-    def __init__(self, df: pd.DataFrame, method_name, embedder_model, format_index, format):
+    def __init__(self, df: pd.DataFrame, method_name, embedder_model, format_index, format, ollama_url):
         self.method_name = method_name
-        self.embedder = Embedder(embedder_model)
+        self.embedder = Embedder(embedder_model, base_url=ollama_url)
         self.embedder_model = embedder_model
         self.format = format
         self.dataset = df
         collection_name_format = f"{method_name}_{embedder_model}"
-        self.indexer = Indexer(embedder_name=embedder_model, method_name=method_name, collection_name=collection_name_format)
-        self.pipeline = RAGPipeline(embedder=self.embedder, indexer=self.indexer, format=format)
-        self.llm = OllamaLLM(model="gpt-oss")
-        self.run_timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        self.indexer = Indexer(embedder_name=embedder_model, base_url=ollama_url, method_name=method_name, collection_name=collection_name_format)
+        self.pipeline = RAGPipeline(embedder=self.embedder, indexer=self.indexer, format=format, base_url=ollama_url)
+        self.llm = OllamaLLM(model="gpt-oss", base_url=ollama_url)
+        self.run_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self.file_string_format = f"result_{method_name}_{embedder_model}_{format_index}_{self.run_timestamp}"
-        self.csv_name = f"{self.file_string_format}.csv"
 
         self.ragas_data = {
             "user_input": [],
@@ -45,7 +44,7 @@ class MethodEvaluator:
         self.rouge = rouge_scorer.RougeScorer(['rouge1','rouge2','rougeL'], use_stemmer=True)
         self.bleu_scores, self.rouge1_scores, self.rouge2_scores, self.rougeL_scores = [], [], [], []
 
-    def run(self, onlyhead:bool = False):
+    def run(self, output_dir, onlyhead:bool = False):
         data_iter = self.dataset.head() if onlyhead else self.dataset.head(100)
         for i, row in data_iter.iterrows():
             print(f"---- Iteration-{i+1} ----")
@@ -89,7 +88,8 @@ class MethodEvaluator:
         self.result_df["rouge1"] = self.rouge1_scores
         self.result_df["rouge2"] = self.rouge2_scores
         self.result_df["rougeL"] = self.rougeL_scores
-        self.result_df.to_csv(self.csv_name, index=False)
+        csv_path = f"{output_dir}/{self.file_string_format}.csv"
+        self.result_df.to_csv(csv_path, index=False)
 
         return self.get_results()
 
@@ -127,12 +127,15 @@ if __name__ == "__main__":
     format_index = sys.argv[4]
     format = sys.argv[5]
     output_dir = sys.argv[6]
-    only_head = sys.argv[7].lower() in ["true", "1", "yes"]
+    ollama_url = sys.argv[7]
+    only_head = sys.argv[8].lower() in ["true", "1", "yes"]
+    print(f"Ollama url should be: {ollama_url}")
+    print(f"Onlyhead should be: {only_head}")
 
     os.makedirs(output_dir, exist_ok=True)
     df = pd.read_csv(qna_path)
-    evaluator = MethodEvaluator(df=df, method_name=method_name, embedder_model=embedder_model, format_index=format_index, format=format)
-    results = evaluator.run(onlyhead=only_head)
+    evaluator = MethodEvaluator(df=df, method_name=method_name, embedder_model=embedder_model, format_index=format_index, format=format, ollama_url=ollama_url)
+    results = evaluator.run(output_dir=output_dir, onlyhead=only_head)
     # --- Save MD per method ---
     md_output = f"{output_dir}/{evaluator.file_string_format}.md"
     with open(md_output, "w", encoding="utf-8") as f:
