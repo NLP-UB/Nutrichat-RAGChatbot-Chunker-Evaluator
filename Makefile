@@ -54,6 +54,25 @@ o-2:
 2-2:
 	tmux attach -t eval-doublepass-qwen3-embedding
 
+-0-0:
+	tmux attach -t index-semantic-embeddinggemma
+-0-1:
+	tmux attach -t index-semantic-all-minilm
+-0-2:
+	tmux attach -t index-semantic-qwen3-embedding
+-1-0:
+	tmux attach -t index-recursive-embeddinggemma
+-1-1:
+	tmux attach -t index-recursive-all-minilm
+-1-2:
+	tmux attach -t index-recursive-qwen3-embedding
+-2-0:
+	tmux attach -t index-doublepass-embeddinggemma
+-2-1:
+	tmux attach -t index-doublepass-all-minilm
+-2-2:
+	tmux attach -t index-doublepass-qwen3-embedding
+
 users:
 	nvidia-smi --query-compute-apps=pid --format=csv,noheader | \
 	xargs -I{} ps -o user= -p {} | sort | uniq
