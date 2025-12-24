@@ -35,42 +35,42 @@ o-1:
 o-2:
 	tmux attach -t ollama-doublepass
 
-0-0:
+e0-0:
 	tmux attach -t eval-semantic-embeddinggemma
-0-1:
+e0-1:
 	tmux attach -t eval-semantic-all-minilm
-0-2:
+e0-2:
 	tmux attach -t eval-semantic-qwen3-embedding
-1-0:
+e1-0:
 	tmux attach -t eval-recursive-embeddinggemma
-1-1:
+e1-1:
 	tmux attach -t eval-recursive-all-minilm
-1-2:
+e1-2:
 	tmux attach -t eval-recursive-qwen3-embedding
-2-0:
+e2-0:
 	tmux attach -t eval-doublepass-embeddinggemma
-2-1:
+e2-1:
 	tmux attach -t eval-doublepass-all-minilm
-2-2:
+e2-2:
 	tmux attach -t eval-doublepass-qwen3-embedding
 	
-0-0-:
+i0-0:
 	tmux attach -t index-semantic-embeddinggemma
-0-1-:
+i0-1:
 	tmux attach -t index-semantic-all-minilm
-0-2-:
+i0-2:
 	tmux attach -t index-semantic-qwen3-embedding
-1-0-:
+i1-0:
 	tmux attach -t index-recursive-embeddinggemma
-1-1-:
+i1-1:
 	tmux attach -t index-recursive-all-minilm
-1-2-:
+i1-2:
 	tmux attach -t index-recursive-qwen3-embedding
-2-0-:
+i2-0:
 	tmux attach -t index-doublepass-embeddinggemma
-2-1-:
+i2-1:
 	tmux attach -t index-doublepass-all-minilm
-2-2-:
+i2-2:
 	tmux attach -t index-doublepass-qwen3-embedding
 
 users:
