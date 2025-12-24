@@ -21,10 +21,10 @@ from ragas.metrics import (
 )
 
 class MethodEvaluator:
-    def __init__(self, method_name, dataset_path):
+    def __init__(self, method_name, output_dir, dataset_path: pd.DataFrame):
         self.method_name = method_name
         self.dataset = dataset_path
-        self.pipeline = RAGPipeline(collection_name=method_name)
+        self.pipeline = RAGPipeline(collection_name=f"{method_name}_embeddinggemma")
         self.llm = OllamaLLM(model="gpt-oss")
         self.embedder = Embedder()
         self.run_timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
@@ -120,7 +120,7 @@ if __name__ == "__main__":
 
     os.makedirs(output_dir, exist_ok=True)
     df = pd.read_csv(dataset_path)
-    evaluator = MethodEvaluator(method_name, df)
+    evaluator = MethodEvaluator(output_dir=output_dir, method_name=method_name, dataset_path=df)
     results = evaluator.run(onlyhead=only_head)
     # --- Save MD per method ---
     md_output = f"{output_dir}/result_{method_name}_{evaluator.run_timestamp}.md"
