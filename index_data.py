@@ -6,7 +6,7 @@ from src.vector_store import VectorStore
 from src.loader import Loader
 
 class Indexer:
-    def __init__(self, embedder_name, method_name, base_url, data_path="data", storage_path="./qdrant_storage", collection_name="semantic"):
+    def __init__(self, embedder_name, method_name, base_url="http://127.0.0.1:11434", data_path="data", storage_path="./qdrant_storage", collection_name="semantic"):
         self.embedder = Embedder(embedder_name, base_url=base_url)
         self.method_name = method_name
         self.loader = Loader(embedder=self.embedder, method_name=method_name)
