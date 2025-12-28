@@ -79,3 +79,6 @@ users:
 
 count:
 	ls -l outputs/2025-12-12_14-04-57 | wc -l
+
+ollama:
+	tmux attach -t ollama
