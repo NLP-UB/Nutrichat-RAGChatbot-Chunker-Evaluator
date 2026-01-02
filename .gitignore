@@ -11,3 +11,4 @@ playground3.py
 *.xlsx
 storage-83/*
 storage-125/*
+indexed_metadata/*

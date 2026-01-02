@@ -1,6 +1,7 @@
 import os
 import glob
 import sys
+import json
 from src.embedder import Embedder
 from src.vector_store import VectorStore
 from src.loader import Loader
@@ -15,6 +16,8 @@ class Indexer:
         self.collection_name = collection_name
         dimension = self.embedder.get_dimension()
         self.vector_store = VectorStore(dimension, storage_path=storage_path, collection_name=collection_name)
+        self.metadata_output_dir = "indexed_metadata"
+        os.makedirs(self.metadata_output_dir, exist_ok=True)
 
 
     def _is_vector_store_empty(self):
@@ -24,6 +27,33 @@ class Indexer:
             return count == 0
         except Exception:
             return True
+
+    def _save_metadata(self, pdf_name, chunks):
+        """
+        Save chunk metadata to a JSON file.
+        
+        Args:
+            pdf_name: Name of the PDF file
+            chunks: List of text chunks
+        """
+        metadata = []
+        for chunk_index, text in enumerate(chunks):
+            metadata.append({
+                "pdf_name": pdf_name,
+                "chunk_index": chunk_index,
+                "text": text
+            })
+        
+        # Create a filename based on the PDF name (remove .pdf and add .json)
+        json_filename = os.path.splitext(pdf_name)[0] + ".chunks.json"
+        json_filepath = os.path.join(self.metadata_output_dir, json_filename)
+        
+        try:
+            with open(json_filepath, 'w', encoding='utf-8') as f:
+                json.dump(metadata, f, ensure_ascii=False, indent=2)
+            print(f"📄 Saved metadata: {json_filepath}")
+        except Exception as e:
+            print(f"Warning: could not save metadata for {pdf_name} ({e})")
 
     def _index_all_pdfs(self, data_path):
         """
@@ -52,15 +82,19 @@ class Indexer:
         print(f"Found {len(pdf_files)} PDF(s). Processing...")
         for file_path in pdf_files:
             try:
+                pdf_name = os.path.basename(file_path)
                 print(f"🔹 Reading: {file_path}")
                 text = self.loader.load_pdf(file_path)
                 if not text.strip():
                     print(f"Skipping empty PDF: {file_path}")
                     continue
 
-                chunks = self.loader.chunk_text(text, chunk_size=500)
+                chunks = self.loader.chunk_text(text, chunk_size=1000)
 
                 embeddings = self.embedder.embed_documents(chunks)
+
+                # Save metadata for this PDF
+                self._save_metadata(pdf_name, chunks)
 
                 all_chunks.extend(chunks)
                 all_embeddings.extend(embeddings)

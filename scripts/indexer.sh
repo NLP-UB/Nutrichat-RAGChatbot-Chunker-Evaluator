@@ -1,8 +1,10 @@
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 OUTPUT="./outputs/$TIMESTAMP"
 
-METHODS=("semantic" "recursive" "doublepass")
-EMBEDDERS=("embeddinggemma" "all-minilm" "qwen3-embedding")
+# METHODS=("semantic" "recursive" "doublepass")
+METHODS=("doublepass")
+# EMBEDDERS=("embeddinggemma" "all-minilm" "qwen3-embedding")
+EMBEDDERS=("embeddinggemma")
 
 # 1. Start Ollama in its own tmux session (first)
 OLLAMA_SESSION="ollama"
