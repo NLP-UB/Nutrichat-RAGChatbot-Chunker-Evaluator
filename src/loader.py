@@ -1,7 +1,7 @@
 import re
 import numpy as np
 from sentence_transformers import util
-import fitz  # PyMuPDF
+import fitz
 from llama_index.core.node_parser import (
     SemanticDoubleMergingSplitterNodeParser,
     LanguageConfig,
@@ -107,13 +107,10 @@ def chunk_text(
             merging_threshold=0.5,
             max_chunk_size=chunk_size,
         )
-        # Bungkus teks jadi Document
         document = Document(text=text)
 
-        # Split jadi nodes
         nodes = splitter.get_nodes_from_documents([document])
 
-        # Ambil konten tiap node ke dalam chunks
         chunks = [node.get_content() for node in nodes]
         
     else:

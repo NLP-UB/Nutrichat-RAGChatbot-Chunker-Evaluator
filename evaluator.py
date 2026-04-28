@@ -13,7 +13,7 @@ class Evaluator:
 
     def evaluate(self, onlyhead:bool = False):
         for method in self.methods:
-            print(f"\n🚀 Running evaluation for: {method}\n")
+            print(f"\nRunning evaluation for: {method}\n")
 
             process = subprocess.Popen(
                 [sys.executable, "evaluate_method.py", method, self.dataset_path, self.output_dir, str(onlyhead)],
@@ -22,16 +22,15 @@ class Evaluator:
                 text=True,
             )
 
-            # Stream output live
             for line in process.stdout:
-                print(line, end="")  # print each line as it comes
+                print(line, end="") 
 
-            process.wait()  # wait until subprocess finishes
+            process.wait()
 
             if process.returncode != 0:
-                print(f"⚠ Method '{method}' failed with return code {process.returncode}.\n")
+                print(f"Method '{method}' failed with return code {process.returncode}.\n")
 
-        print(f"\n✅ Evaluation finished.\n")
+        print(f"\nEvaluation finished.\n")
 
 if __name__ == "__main__":
     methods = ["semantic", "recursive", "doublepass"]

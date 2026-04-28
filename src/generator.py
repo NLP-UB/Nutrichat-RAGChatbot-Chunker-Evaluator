@@ -15,7 +15,6 @@ class Generator:
 
         response_content = response["message"]["content"]
 
-        # hapus isi <think>...</think>
         final_answer = re.sub(
             r"<think>.*?</think>", "", response_content, flags=re.DOTALL
         ).strip()

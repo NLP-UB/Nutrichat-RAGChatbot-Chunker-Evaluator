@@ -25,7 +25,6 @@ class RAGPipeline:
         self.retriever = Retriever(self.vector_store, self.embedder)
         self.collection_name = collection_name
 
-        # Perform indexing only once at initialization (if data_path provided)
         if data_path and self._is_vector_store_empty():
             self._index_all_pdfs(data_path)
         else:
@@ -50,11 +49,10 @@ class RAGPipeline:
             print(f"No PDF files found in directory: {data_path}")
             return
 
-        # 🔹 Kosongkan dulu koleksi biar tidak duplikat
         try:
             self.vector_store.client.delete(
                 collection_name=self.collection_name,
-                points_selector={"filter": {}}  # hapus semua point
+                points_selector={"filter": {}} 
             )
             print(f"Cleared existing data in collection: {self.collection_name}")
         except Exception as e:
@@ -66,7 +64,7 @@ class RAGPipeline:
         print(f"Found {len(pdf_files)} PDF(s). Processing...")
         for file_path in pdf_files:
             try:
-                print(f"🔹 Reading: {file_path}")
+                print(f"Reading: {file_path}")
                 text = load_pdf(file_path)
                 if not text.strip():
                     print(f"Skipping empty PDF: {file_path}")
@@ -103,17 +101,12 @@ class RAGPipeline:
         Returns:
             [answer_text, list_of_top_texts]
         """
-        # Retrieve top-k documents
         retrieved = self.retriever.retrieve(query, top_k)
         
-        # Extract only the text parts for context
         top_texts = [r[0] for r in retrieved]
         
-        # Combine all texts to feed into the generator
         context = " ".join(top_texts)
         
-        # Generate answer
         answer = self.generator.generate(context, query)
         
-        # Return answer and top retrieved texts as a 2-element list
         return [answer, top_texts]

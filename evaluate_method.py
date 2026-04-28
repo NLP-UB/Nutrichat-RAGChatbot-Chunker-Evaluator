@@ -10,7 +10,6 @@ from src.embedder import Embedder
 from langchain_ollama import OllamaLLM
 from datetime import datetime
 
-# RAGas imports
 from ragas import evaluate as ragas_evaluate
 from ragas.run_config import RunConfig
 from ragas.metrics import (
@@ -46,29 +45,25 @@ class MethodEvaluator:
             question = row["question"]
             ground_truth = row["answer"]
 
-            # === Generate answer from RAGPipeline ===
             prediction = self.pipeline.answer_question_with_context(question)
             answer_prediction = prediction[0]
             context = prediction[1]
 
-            # --- BLEU ---
             bleu = sacrebleu.sentence_bleu(answer_prediction, [ground_truth])
             self.bleu_scores.append(bleu.score)
 
-            # --- ROUGE ---
             r = self.rouge.score(ground_truth, answer_prediction)
             self.rouge1_scores.append(r["rouge1"].fmeasure)
             self.rouge2_scores.append(r["rouge2"].fmeasure)
             self.rougeL_scores.append(r["rougeL"].fmeasure)
 
-            # Append to column-wise data
             self.ragas_data["user_input"].append(question)
             self.ragas_data["retrieved_contexts"].append(context)
             self.ragas_data["response"].append(answer_prediction)
             self.ragas_data["reference"].append(ground_truth)
 
         dataset = Dataset.from_dict(self.ragas_data)
-        # --- Evaluate with RAGas ---
+
         ragas_result = ragas_evaluate(
             dataset=dataset,
             llm=self.llm,
@@ -88,13 +83,11 @@ class MethodEvaluator:
         return self.get_results()
 
     def get_results(self):
-        # --- BLEU & ROUGE ---
         avg_bleu = np.mean(self.bleu_scores) if self.bleu_scores else 0
         avg_rouge1 = np.mean(self.rouge1_scores) if self.rouge1_scores else 0
         avg_rouge2 = np.mean(self.rouge2_scores) if self.rouge2_scores else 0
         avg_rougeL = np.mean(self.rougeL_scores) if self.rougeL_scores else 0
 
-        # --- RAGAS Metrics (replace NaN with 0 before averaging) ---
         avg_context_precision = np.nanmean(self.result_df["context_precision"].fillna(0)) if "context_precision" in self.result_df else 0
         avg_context_recall = np.nanmean(self.result_df["context_recall"].fillna(0)) if "context_recall" in self.result_df else 0
         avg_faithfulness = np.nanmean(self.result_df["faithfulness"].fillna(0)) if "faithfulness" in self.result_df else 0
@@ -109,7 +102,7 @@ class MethodEvaluator:
             "Context-Recall": avg_context_recall,
             "Faithfulness": avg_faithfulness,
             "Answer-Relevancy": avg_answer_relevancy,
-            "Overall": self.result_df  # DataFrame hasil evaluasi keseluruhan
+            "Overall": self.result_df
         }
 
 if __name__ == "__main__":
@@ -122,7 +115,6 @@ if __name__ == "__main__":
     df = pd.read_csv(dataset_path)
     evaluator = MethodEvaluator(output_dir=output_dir, method_name=method_name, dataset_path=df)
     results = evaluator.run(onlyhead=only_head)
-    # --- Save MD per method ---
     md_output = f"{output_dir}/result_{method_name}_{evaluator.run_timestamp}.md"
     with open(md_output, "w", encoding="utf-8") as f:
         for i, row in evaluator.result_df.iterrows():
@@ -137,7 +129,6 @@ if __name__ == "__main__":
                     f.write(f"{j}. {repr(ctx)}\n")
             else:
                 f.write(f"{row['retrieved_contexts']}\n")
-            # === Combined Table with Headers ===
             f.write("## Evaluation Scores\n\n")
             f.write("| Basic Metrics | | | | RAGAS Metrics | | | |\n")
             f.write("|---------------|---------------|--------------|------------------|------|---------|---------|---------|\n")
@@ -154,7 +145,7 @@ if __name__ == "__main__":
             )
 
         f.write("\n---\n\n")
-    # --- Save TXT per method ---
+
     txt_output = f"{output_dir}/result_{method_name}_{evaluator.run_timestamp}.txt"
     with open(txt_output, "w") as f:
         f.write(f"----------------------------------------\n")
@@ -173,5 +164,4 @@ if __name__ == "__main__":
         f.write("\n--- Overall Evaluation ---\n")
         f.write(results['Overall'].to_string(index=False))
 
-    # --- Print ke stdout ---
-    print(f"✅ Evaluaton finished for {method_name}")
+    print(f"Evaluaton finished for {method_name}")

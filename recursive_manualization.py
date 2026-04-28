@@ -27,7 +27,6 @@ def recursive_split_to_excel_verbose_force_sep(text, separators, chunk_size=50, 
         else:
             sep_verbose = sep if sep else None
 
-        # Catat langkah sebelum split
         records.append({
             "depth": depth,
             "separator": sep_verbose,
@@ -37,7 +36,6 @@ def recursive_split_to_excel_verbose_force_sep(text, separators, chunk_size=50, 
             "action": "split attempt"
         })
 
-        # Split text jika ada separator
         if sep and sep in text:
             parts = text.split(sep)
         else:
@@ -70,7 +68,6 @@ def recursive_split_to_excel_verbose_force_sep(text, separators, chunk_size=50, 
 
     all_parts = recursive_split(text, separators)
 
-    # Merge ke chunk berdasarkan chunk_size
     temp = ""
     for part in all_parts:
         if len(temp) + len(part) + 1 <= chunk_size:
@@ -115,14 +112,12 @@ def recursive_split_to_excel_verbose_force_sep(text, separators, chunk_size=50, 
             "action": "finalize last chunk"
         })
 
-    # Simpan ke Excel
     df = pd.DataFrame(records)
     df.to_excel(excel_file, index=False)
     print(f"[INFO] Saved verbose recursive split to '{excel_file}' with {len(chunks)} chunks.")
 
     return chunks
 
-# Contoh penggunaan
 text = ("Bronkopneumonia pada anak usia dini sering kali disebabkan oleh infeksi bakteri, virus, atau jamur "
         "yang menyerang saluran napas bagian bawah. Gejala yang umum meliputi demam tinggi, batuk berdahak, "
         "sesak napas, dan napas cepat. Pada kasus berat, dapat terjadi penurunan kesadaran dan kegagalan pernapasan. "

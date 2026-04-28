@@ -16,23 +16,19 @@ class VectorStore:
         self.collection_name = collection_name
         self.dimension = dimension
 
-        # Try connecting to server mode first
         if prefer_server:
             try:
                 self.client = QdrantClient(host=host, port=port, timeout=120.0)
-                # simple health check
                 self.client.get_collections()
-                print(f"✅ Connected to Qdrant server at {host}:{port}")
+                print(f"Connected to Qdrant server at {host}:{port}")
             except Exception as e:
-                print(f"⚠️ Could not connect to Qdrant server, falling back to local mode. Reason: {e}")
+                print(f"Could not connect to Qdrant server, falling back to local mode. Reason: {e}")
                 os.makedirs(storage_path, exist_ok=True)
                 self.client = QdrantClient(path=storage_path)
         else:
-            # Always use embedded mode
             os.makedirs(storage_path, exist_ok=True)
             self.client = QdrantClient(path=storage_path)
 
-        # Ensure collection exists
         collections = [col.name for col in self.client.get_collections().collections]
         if collection_name not in collections:
             self.client.recreate_collection(
@@ -57,7 +53,7 @@ class VectorStore:
             self.client.upsert(
                 collection_name=self.collection_name,
                 points=points,
-                wait=True  # tunggu sampai selesai
+                wait=True
             )
 
     def search(self, query_embedding, top_k=3):
